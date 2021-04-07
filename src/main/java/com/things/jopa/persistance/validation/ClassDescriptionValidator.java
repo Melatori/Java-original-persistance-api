@@ -21,4 +21,17 @@ public class ClassDescriptionValidator {
             throw new JopaValidationException("More then 1 primary key in class: [" + classDescription.getClazz() + "]");
         }
     }
+
+    public void validateKey(ClassDescription classDescription, Object key) {
+        Class<?> keyClass = classDescription.getFieldDescriptions().stream()
+                .filter(ClassDescription.FieldDescription::getIsKey)
+                .map(ClassDescription.FieldDescription::getFieldClass)
+                .findFirst()
+                .orElseThrow(() -> new JopaValidationException("Unable to find key in class: [" + classDescription.getClazz() + "]"));
+
+        if (key == null)
+            throw new JopaValidationException("Key can't be null");
+        if (!key.getClass().equals(keyClass))
+            throw new JopaValidationException("Key of class [" + key.getClass() + "] is not applicable in entity of class: [" + classDescription.getClazz() + "]");
+    }
 }

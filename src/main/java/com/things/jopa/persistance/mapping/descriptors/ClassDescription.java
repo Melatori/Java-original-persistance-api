@@ -47,7 +47,7 @@ public class ClassDescription {
             fieldDescriptions.add(new FieldDescription(
                     columnName,
                     fieldName,
-                    field.getDeclaringClass(),
+                    field.getType(),
                     isKey
             ));
         }

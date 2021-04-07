@@ -7,15 +7,16 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("OptionalGetWithoutIsPresent")
 class ObjectDescriptionTest {
     @Test
     public void shouldCreateObjectDescriptionFromObject() {
         //given
-        TestingEntity testingEntity = new TestingEntity();
-        testingEntity.setId(1);
-        testingEntity.setString("test");
-        testingEntity.setADouble(2.4);
-
+        TestingEntity testingEntity = TestingEntity.builder()
+                .id(1)
+                .string("test")
+                .aDouble(2.4)
+                .build();
         Class<?> testingClass = TestingEntity.class;
 
         //when
@@ -38,10 +39,11 @@ class ObjectDescriptionTest {
     @Test
     public void shouldCreateCustomObjectDescriptionFromObject() {
         //given
-        TestingCustomEntity testingEntity = new TestingCustomEntity();
-        testingEntity.setId(1);
-        testingEntity.setString("test");
-        testingEntity.setADouble(2.4);
+        TestingCustomEntity testingEntity = TestingCustomEntity.builder()
+                .id(1)
+                .string("test")
+                .aDouble(2.4)
+                .build();
 
         Class<?> testingClass = TestingCustomEntity.class;
 
