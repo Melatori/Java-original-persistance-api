@@ -118,4 +118,22 @@ class QueryCreatorTest {
         assertThat(actual1).isEqualTo(expected1);
         assertThat(actual2).isEqualTo(expected2);
     }
+
+    @Test
+    void shouldCreateCreateTableQuery() {
+        //given
+        String expected1 = "create table TestingEntity (id integer, string text, aDouble double);";
+        String expected2 = "create table Test (pk integer, string text, aDouble double);";
+
+        ClassDescription classDescription1 = new ClassDescription(TestingEntity.class);
+        ClassDescription classDescription2 = new ClassDescription(TestingCustomEntity.class);
+
+        //when
+        String actual1 = QueryCreator.createCreateTableQuery(classDescription1);
+        String actual2 = QueryCreator.createCreateTableQuery(classDescription2);
+
+        //then
+        assertThat(actual1).isEqualTo(expected1);
+        assertThat(actual2).isEqualTo(expected2);
+    }
 }

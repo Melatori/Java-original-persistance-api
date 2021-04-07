@@ -1,7 +1,7 @@
 package com.things.jopa.persistance.utils;
 
 public enum JopaComponentStatus {
-    NOT_INITIALIZED(true),
+    NOT_INITIALIZED(false),
     INITIALIZED(true),
     READY(true);
     private final boolean isLocked;

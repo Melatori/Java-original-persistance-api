@@ -161,6 +161,34 @@ public class QueryCreator {
                 ";";
     }
 
+    public static String createCreateTableQuery(ClassDescription classDescription) {
+        classDescriptionValidator.validate(classDescription);
+
+        String tableName = classDescription.getTableName();
+        String[] columnNames = classDescription.getFieldDescriptions().stream()
+                .map(ClassDescription.FieldDescription::getColumnName)
+                .toArray(String[]::new);
+        String[] columnTypes = classDescription.getFieldDescriptions().stream()
+                .map(fieldDescription -> transformType(fieldDescription.getFieldClass()))
+                .toArray(String[]::new);
+
+        StringBuilder queryBuilder = new StringBuilder("create table ");
+        queryBuilder.append(tableName)
+                .append(" (");
+
+        for (int i = 0; i < columnNames.length; i++) {
+            if (i != 0)
+                queryBuilder.append(", ");
+
+            queryBuilder.append(columnNames[i])
+                    .append(" ")
+                    .append(columnTypes[i]);
+        }
+
+        queryBuilder.append(");");
+        return queryBuilder.toString();
+    }
+
     private static String transformType(Object object) {
         if (object instanceof Integer)
             return object.toString();
@@ -174,5 +202,20 @@ public class QueryCreator {
             return object.toString();
         else
             return "'" + object.toString() + "'";
+    }
+
+    private static String transformType(Class<?> clazz) {
+        if (clazz.equals(Integer.class))
+            return "integer";
+        if (clazz.equals(Double.class))
+            return "double";
+        if (clazz.equals(Float.class))
+            return "float";
+        if (clazz.equals(Long.class))
+            return "long";
+        if (clazz.equals(Short.class))
+            return "short";
+        else
+            return "text";
     }
 }
