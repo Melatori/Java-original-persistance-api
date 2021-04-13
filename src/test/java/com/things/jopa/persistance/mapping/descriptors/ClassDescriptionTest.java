@@ -24,7 +24,7 @@ class ClassDescriptionTest {
         assertThat(classDescription.getFieldDescriptions().size()).isEqualTo(testingClass.getDeclaredFields().length);
         for (ClassDescription.FieldDescription fieldDescription : classDescription.getFieldDescriptions()) {
             assertThat(Arrays.stream(testingClass.getDeclaredFields())
-                    .anyMatch(field -> fieldDescription.getFieldClass() == field.getDeclaringClass())).isTrue();
+                    .anyMatch(field -> fieldDescription.getFieldClass() == field.getType())).isTrue();
             assertThat(fieldDescription.getColumnName()).isEqualTo(fieldDescription.getFieldName());
         }
     }
@@ -43,7 +43,7 @@ class ClassDescriptionTest {
         assertThat(classDescription.getFieldDescriptions().size()).isEqualTo(testingClass.getDeclaredFields().length);
         for (ClassDescription.FieldDescription fieldDescription : classDescription.getFieldDescriptions()) {
             assertThat(Arrays.stream(testingClass.getDeclaredFields())
-                    .anyMatch(field -> fieldDescription.getFieldClass() == field.getDeclaringClass())).isTrue();
+                    .anyMatch(field -> fieldDescription.getFieldClass() == field.getType())).isTrue();
         }
     }
 }

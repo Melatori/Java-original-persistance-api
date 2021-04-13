@@ -3,7 +3,7 @@ package com.things.jopa.persistance;
 import com.things.jopa.persistance.mapping.descriptors.ClassDescription;
 import com.things.jopa.persistance.utils.JopaComponentStatus;
 import com.things.jopa.persistance.utils.JopaComponents;
-import com.things.jopa.persistance.utils.SchemaCreator;
+import com.things.jopa.persistance.utils.SchemaEditor;
 import com.things.jopa.persistance.validation.SchemaValidator;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,8 +17,8 @@ public class JopaInitializer {
         CREATE_SCHEMA
     }
 
-    private final SchemaCreator schemaCreator = new SchemaCreator();
     private final SchemaValidator schemaValidator = new SchemaValidator();
+    private final SchemaEditor schemaEditor = new SchemaEditor(schemaValidator);
 
     private InitializationStrategies strategy = InitializationStrategies.EXISTED_SCHEMA;
     private volatile JopaComponentStatus componentStatus = JopaComponentStatus.NOT_INITIALIZED;
@@ -39,7 +39,7 @@ public class JopaInitializer {
         List<ClassDescription> entities = entityScanner.scan();
 
         if (strategy == InitializationStrategies.CREATE_SCHEMA) {
-            schemaCreator.createSchema(entities, dataSource);
+            schemaEditor.createSchema(entities, dataSource);
         }
         schemaValidator.validate(entities, dataSource);
 

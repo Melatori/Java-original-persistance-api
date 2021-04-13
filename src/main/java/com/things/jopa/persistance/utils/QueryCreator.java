@@ -1,9 +1,15 @@
 package com.things.jopa.persistance.utils;
 
+import com.things.jopa.persistance.exceptions.JopaException;
+import com.things.jopa.persistance.exceptions.JopaValidationException;
 import com.things.jopa.persistance.mapping.descriptors.ClassDescription;
 import com.things.jopa.persistance.mapping.descriptors.ObjectDescription;
 import com.things.jopa.persistance.validation.ClassDescriptionValidator;
 import com.things.jopa.persistance.validation.ObjectDescriptionValidator;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class QueryCreator {
     private static final ClassDescriptionValidator classDescriptionValidator = new ClassDescriptionValidator();
@@ -90,7 +96,7 @@ public class QueryCreator {
             if (i != 0)
                 queryBuilder.append(", ");
 
-            queryBuilder.append(transformType(values[i]));
+            queryBuilder.append(transformToSqlType(values[i]));
         }
 
         return queryBuilder.append(");")
@@ -129,13 +135,13 @@ public class QueryCreator {
 
             queryBuilder.append(columnNames[i])
                     .append("=")
-                    .append(transformType(values[i]));
+                    .append(transformToSqlType(values[i]));
         }
 
         return queryBuilder.append(" where ")
                 .append(keyName)
                 .append("=")
-                .append(transformType(keyValue))
+                .append(transformToSqlType(keyValue))
                 .append(";")
                 .toString();
     }
@@ -157,7 +163,7 @@ public class QueryCreator {
                 " where " +
                 keyName +
                 "=" +
-                transformType(key) +
+                transformToSqlType(key) +
                 ";";
     }
 
@@ -169,7 +175,7 @@ public class QueryCreator {
                 .map(ClassDescription.FieldDescription::getColumnName)
                 .toArray(String[]::new);
         String[] columnTypes = classDescription.getFieldDescriptions().stream()
-                .map(fieldDescription -> transformType(fieldDescription.getFieldClass()))
+                .map(fieldDescription -> transformToSqlType(fieldDescription.getFieldClass()))
                 .toArray(String[]::new);
 
         StringBuilder queryBuilder = new StringBuilder("create table ");
@@ -189,7 +195,65 @@ public class QueryCreator {
         return queryBuilder.toString();
     }
 
-    private static String transformType(Object object) {
+    public static String[] createAlterTableQuery(
+            ClassDescription classDescription,
+            String[] fieldsToRemove,
+            ClassDescription.FieldDescription[] fieldsToAdd
+    ) {
+        classDescriptionValidator.validate(classDescription);
+        if (fieldsToRemove.length < 1 && fieldsToAdd.length < 1) {
+            throw new JopaValidationException("Nothing to add or remove");
+        }
+
+        List<String> resultList = new ArrayList<>();
+
+        String tableName = classDescription.getTableName();
+        String[] columnNames = Arrays.stream(fieldsToAdd)
+                .map(ClassDescription.FieldDescription::getColumnName)
+                .toArray(String[]::new);
+        String[] columnTypes = Arrays.stream(fieldsToAdd)
+                .map(fieldDescription -> transformToSqlType(fieldDescription.getFieldClass()))
+                .toArray(String[]::new);
+
+        String dropColumnQuery;
+        String addColumnQuery;
+
+        if (fieldsToRemove.length >= 1) {
+            StringBuilder dropQueryBuilder = new StringBuilder("alter table ")
+                    .append(tableName)
+                    .append(" drop column ");
+            for (int i = 0; i < fieldsToRemove.length; i++) {
+                if (i != 0)
+                    dropQueryBuilder.append(", ");
+
+                dropQueryBuilder.append(fieldsToRemove[i]);
+            }
+            dropColumnQuery = dropQueryBuilder.append(";")
+                    .toString();
+            resultList.add(dropColumnQuery);
+        }
+
+        if (fieldsToAdd.length >= 1) {
+            StringBuilder addQueryBuilder = new StringBuilder("alter table ")
+                    .append(tableName)
+                    .append(" add ");
+            for (int i = 0; i < fieldsToAdd.length; i++) {
+                if (i != 0)
+                    addQueryBuilder.append(", ");
+
+                addQueryBuilder.append(columnNames[i])
+                        .append(" ")
+                        .append(columnTypes[i]);
+            }
+            addColumnQuery = addQueryBuilder.append(";")
+                    .toString();
+            resultList.add(addColumnQuery);
+        }
+
+        return resultList.toArray(String[]::new);
+    }
+
+    private static String transformToSqlType(Object object) {
         if (object instanceof Integer)
             return object.toString();
         if (object instanceof Double)
@@ -204,18 +268,30 @@ public class QueryCreator {
             return "'" + object.toString() + "'";
     }
 
-    private static String transformType(Class<?> clazz) {
+    public static String transformToSqlType(Class<?> clazz) {
         if (clazz.equals(Integer.class))
-            return "integer";
+            return "INTEGER";
         if (clazz.equals(Double.class))
-            return "double";
+            return "DOUBLE";
         if (clazz.equals(Float.class))
-            return "float";
+            return "FLOAT";
         if (clazz.equals(Long.class))
-            return "long";
+            return "LONG";
         if (clazz.equals(Short.class))
-            return "short";
+            return "SHORT";
         else
-            return "text";
+            return "TEXT";
+    }
+
+    public static String transformToSqlType(int javaSQLType) {
+        return switch (javaSQLType) {
+            case 4 -> "INTEGER";
+            case 8 -> "DOUBLE";
+            case 6 -> "FLOAT";
+            case -5 -> "LONG";
+            case 5 -> "SHORT";
+            case 2005 -> "TEXT";
+            default -> throw new JopaException("Unrecognized javaSQLType: " + javaSQLType);
+        };
     }
 }

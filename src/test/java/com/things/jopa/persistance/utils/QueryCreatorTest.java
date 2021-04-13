@@ -122,8 +122,8 @@ class QueryCreatorTest {
     @Test
     void shouldCreateCreateTableQuery() {
         //given
-        String expected1 = "create table TestingEntity (id integer, string text, aDouble double);";
-        String expected2 = "create table Test (pk integer, string text, aDouble double);";
+        String expected1 = "create table TestingEntity (id INTEGER, string TEXT, aDouble DOUBLE);";
+        String expected2 = "create table Test (pk INTEGER, string TEXT, aDouble DOUBLE);";
 
         ClassDescription classDescription1 = new ClassDescription(TestingEntity.class);
         ClassDescription classDescription2 = new ClassDescription(TestingCustomEntity.class);
@@ -135,5 +135,38 @@ class QueryCreatorTest {
         //then
         assertThat(actual1).isEqualTo(expected1);
         assertThat(actual2).isEqualTo(expected2);
+    }
+
+    @Test
+    void createAlterTableQuery() {
+        //given
+        String expected1_1 = "alter table TestingEntity drop column aDouble;";
+        String expected1_2 = "alter table TestingEntity add newColumn TEXT;";
+        String expected2_1 = "alter table Test drop column aDouble;";
+        String expected2_2 = "alter table Test add newColumn TEXT;";
+
+        ClassDescription classDescription1 = new ClassDescription(TestingEntity.class);
+        ClassDescription classDescription2 = new ClassDescription(TestingCustomEntity.class);
+        ClassDescription.FieldDescription fieldDescription = new ClassDescription.FieldDescription(
+                "newColumn", "newField", String.class, false
+        );
+
+        //when
+        String[] actual1 = QueryCreator.createAlterTableQuery(
+                classDescription1,
+                new String[]{"aDouble"},
+                new ClassDescription.FieldDescription[]{fieldDescription}
+        );
+        String[] actual2 = QueryCreator.createAlterTableQuery(
+                classDescription2,
+                new String[]{"aDouble"},
+                new ClassDescription.FieldDescription[]{fieldDescription}
+        );
+
+        //then
+        assertThat(actual1[0]).isEqualTo(expected1_1);
+        assertThat(actual1[1]).isEqualTo(expected1_2);
+        assertThat(actual2[0]).isEqualTo(expected2_1);
+        assertThat(actual2[1]).isEqualTo(expected2_2);
     }
 }

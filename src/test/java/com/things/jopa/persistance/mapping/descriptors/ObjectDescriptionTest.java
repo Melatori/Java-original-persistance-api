@@ -60,7 +60,10 @@ class ObjectDescriptionTest {
                 .get()
                 .getValue()).isEqualTo(testingEntity.getId());
         for (ObjectDescription.FieldDescription<?> fieldDescription : objectDescription.getFieldDescriptions()) {
-            assertThat(fieldDescription.getColumnName()).isEqualTo(fieldDescription.getFieldName());
+            if (fieldDescription.getFieldName().equals("id"))
+                assertThat(fieldDescription.getColumnName()).isNotEqualTo(fieldDescription.getFieldName());
+            else
+                assertThat(fieldDescription.getColumnName()).isEqualTo(fieldDescription.getFieldName());
         }
     }
 

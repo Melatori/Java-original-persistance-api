@@ -12,7 +12,7 @@ public class Application {
 
 
         JopaInitializer jopaInitializer = new JopaInitializer();
-        jopaInitializer.chooseStrategy(JopaInitializer.InitializationStrategies.CREATE_SCHEMA);
+        jopaInitializer.chooseStrategy(JopaInitializer.InitializationStrategies.EXISTED_SCHEMA);
         jopaInitializer.initializeJpa(dataSource);
     }
 }
