@@ -4,6 +4,7 @@ import com.things.jopa.persistance.annotations.Column;
 import com.things.jopa.persistance.annotations.Entity;
 import com.things.jopa.persistance.annotations.PrimaryKey;
 import com.things.jopa.persistance.exceptions.JopaException;
+import com.things.jopa.persistance.utils.QueryCreator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.h2.util.StringUtils;
@@ -93,14 +94,14 @@ public class ObjectDescription {
 
             try {
                 ResultSetMetaData metaData = resultSet.getMetaData();
-                for (int i = 0; i < metaData.getColumnCount(); i++) {
-                    Class<?> fieldClass = field.getDeclaringClass();
+                for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                    Class<?> fieldClass = field.getType();
 
-                    if (metaData.getColumnName(i).equals(columnName)) {
+                    if (metaData.getColumnName(i).equals(columnName.toUpperCase())) {
                         fieldDescriptions.add(new FieldDescription<>(
                                 columnName,
                                 fieldName,
-                                fieldClass.cast(resultSet.getObject(i)),
+                                fieldClass.cast(getValueFromResultSet(resultSet, i)),
                                 isKey
                         ));
                         break;
@@ -109,6 +110,31 @@ public class ObjectDescription {
             } catch (SQLException e) {
                 throw new JopaException("Things went wrong with creation ObjectDescriptor from ResultSet", e);
             }
+        }
+    }
+
+    public Object getId() {
+        return fieldDescriptions.stream()
+                .filter(FieldDescription::getIsKey)
+                .map(FieldDescription::getValue)
+                .findFirst()
+                .orElseThrow(() -> new JopaException("Key is not found, error in entity class: [" + objectClass + "]"));
+    }
+
+    private Object getValueFromResultSet(ResultSet resultSet, int index) {
+        try {
+            final String type = QueryCreator.transformToSqlType(resultSet.getMetaData().getColumnType(index));
+            return switch (type) {
+                case "INTEGER" -> resultSet.getInt(index);
+                case "DOUBLE" -> resultSet.getDouble(index);
+                case "FLOAT" -> resultSet.getFloat(index);
+                case "LONG" -> resultSet.getLong(index);
+                case "SHORT" -> resultSet.getShort(index);
+                case "TEXT" -> resultSet.getString(index);
+                default -> resultSet.getObject(index);
+            };
+        } catch (SQLException e) {
+            throw new JopaException("Things went wrong with creation ObjectDescriptor from ResultSet", e);
         }
     }
 

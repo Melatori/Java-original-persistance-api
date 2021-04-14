@@ -15,7 +15,7 @@ public class ObjectMapperImpl<T> implements ObjectMapper<T> {
             object = (T) objectClass.getConstructor().newInstance();
 
             for (ObjectDescription.FieldDescription<?> fieldDescription : descriptor.getFieldDescriptions()) {
-                Field field = objectClass.getField(fieldDescription.getFieldName());
+                Field field = objectClass.getDeclaredField(fieldDescription.getFieldName());
                 field.setAccessible(true);
                 field.set(object, fieldDescription.getValue());
             }

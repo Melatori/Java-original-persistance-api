@@ -18,10 +18,12 @@ import static com.things.jopa.persistance.Messages.UNEXPECTED_ERROR_IN_DB;
 public class SchemaValidator {
     public void validate(List<ClassDescription> entities, DataSource dataSource) {
         try (Connection connection = dataSource.getConnection()) {
-            for (ClassDescription entity : entities)
-                if (validateEntity(entity, connection).equals(EntityInDbStatus.NOT_EXISTS) ||
-                        validateEntity(entity, connection).equals(EntityInDbStatus.INVALID))
+            for (ClassDescription entity : entities) {
+                final EntityInDbStatus entityStatus = validateEntity(entity, connection);
+                if (entityStatus.equals(EntityInDbStatus.NOT_EXISTS) ||
+                        entityStatus.equals(EntityInDbStatus.INVALID))
                     throw new JopaValidationException("Schema validation failed");
+            }
         } catch (SQLException e) {
             throw new JopaException(UNEXPECTED_ERROR_IN_DB, e);
         }
@@ -32,7 +34,7 @@ public class SchemaValidator {
             return EntityInDbStatus.NOT_EXISTS;
 
         for (ClassDescription.FieldDescription fieldDescription : classDescription.getFieldDescriptions())
-            if (isTableMatchesToField(fieldDescription, classDescription.getTableName(), connection))
+            if (!isTableMatchesToField(fieldDescription, classDescription.getTableName(), connection))
                 return EntityInDbStatus.INVALID;
 
         return EntityInDbStatus.VALID;

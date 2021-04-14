@@ -1,22 +1,21 @@
 package com.things.jopa.persistance.repository;
 
 import com.things.jopa.persistance.exceptions.JopaException;
+import com.things.jopa.persistance.mapping.ObjectMapper;
 import com.things.jopa.persistance.mapping.ObjectMapperImpl;
 import com.things.jopa.persistance.mapping.descriptors.ClassDescription;
 import com.things.jopa.persistance.mapping.descriptors.ObjectDescription;
-import com.things.jopa.persistance.mapping.ObjectMapper;
 import com.things.jopa.persistance.utils.ConnectionHandler;
 import com.things.jopa.persistance.utils.QueryCreator;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class CrudRepositoryImpl<T, K> implements CrudRepository<T, K>{
+import static com.things.jopa.persistance.Messages.UNEXPECTED_ERROR_IN_DB;
+
+public class CrudRepositoryImpl<T, K> implements CrudRepository<T, K> {
     private final Class<T> tClass;
     private final ConnectionHandler connectionHandler;
     private final ObjectMapper<T> objectMapper;
@@ -36,31 +35,27 @@ public class CrudRepositoryImpl<T, K> implements CrudRepository<T, K>{
         List<T> result = new ArrayList<>();
 
         String query = QueryCreator.createSelectAllQuery(classDescription);
-        Connection connection = connectionHandler.getConnection();
 
-        try (Statement statement = connection.createStatement()) {
-            resultSet = statement.executeQuery(query);
-        } catch (SQLException e) {
-            throw new JopaException("Statement failed exception", e);
-        }
-        if (resultSet == null) {
-            return result;
-        }
+        try (Connection connection = connectionHandler.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
 
-        List<ObjectDescription> resultDescriptors = new ArrayList<>();
-        try {
+            resultSet = statement.executeQuery();
+
+            if (resultSet == null) {
+                return result;
+            }
+
+            List<ObjectDescription> resultDescriptors = new ArrayList<>();
             while (resultSet.next()) {
                 ObjectDescription resultDescriptor = new ObjectDescription(resultSet, tClass);
                 resultDescriptors.add(resultDescriptor);
             }
+            for (ObjectDescription descriptor : resultDescriptors) {
+                result.add(objectMapper.convertToObject(descriptor));
+            }
         } catch (SQLException e) {
-            throw new JopaException("ResultSet exception", e);
+            throw new JopaException(UNEXPECTED_ERROR_IN_DB, e);
         }
-
-        for (ObjectDescription descriptor : resultDescriptors) {
-            result.add(objectMapper.convertToObject(descriptor));
-        }
-
         return result;
     }
 
@@ -69,40 +64,70 @@ public class CrudRepositoryImpl<T, K> implements CrudRepository<T, K>{
         ResultSet resultSet;
 
         String query = QueryCreator.createSelectByIdQuery(classDescription, id);
-        Connection connection = connectionHandler.getConnection();
 
-        try (Statement statement = connection.createStatement()) {
-            resultSet = statement.executeQuery(query);
+        try (Connection connection = connectionHandler.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
+
+            resultSet = statement.executeQuery();
+
+            if (resultSet == null) {
+                return null;
+            }
+
+            ObjectDescription resultDescriptor = null;
+            while (resultSet.next()) {
+                resultDescriptor = new ObjectDescription(resultSet, tClass);
+            }
+            if (resultDescriptor == null)
+                return null;
+
+            return objectMapper.convertToObject(resultDescriptor);
         } catch (SQLException e) {
-            throw new JopaException("Statement failed exception", e);
+            throw new JopaException(UNEXPECTED_ERROR_IN_DB, e);
         }
-        if (resultSet == null) {
-            return null;
-        }
-
-        try {
-            resultSet.next();
-        } catch (SQLException e) {
-            throw new JopaException("ResultSet exception", e);
-        }
-
-        ObjectDescription resultDescriptor = new ObjectDescription(resultSet, tClass);
-
-        return objectMapper.convertToObject(resultDescriptor);
     }
 
     @Override
     public T post(T object) {
-        return null;
+        ObjectDescription objectDescription = new ObjectDescription(object);
+        String query = QueryCreator.createInsertQuery(objectDescription);
+
+        try (Connection connection = connectionHandler.getConnection()) {
+            final PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.execute();
+
+            //noinspection unchecked
+            return getById((K) objectDescription.getId());
+        } catch (SQLException e) {
+            throw new JopaException(UNEXPECTED_ERROR_IN_DB, e);
+        }
     }
 
     @Override
     public T put(T object) {
-        return null;
+        ObjectDescription objectDescription = new ObjectDescription(object);
+        String query = QueryCreator.createUpdateQuery(objectDescription);
+
+        try (Connection connection = connectionHandler.getConnection()) {
+            final PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.execute();
+
+            //noinspection unchecked
+            return getById((K) objectDescription.getId());
+        } catch (SQLException e) {
+            throw new JopaException(UNEXPECTED_ERROR_IN_DB, e);
+        }
     }
 
     @Override
     public void delete(K key) {
+        String query = QueryCreator.createDeleteQuery(classDescription, key);
 
+        try (Connection connection = connectionHandler.getConnection()) {
+            final PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            throw new JopaException(UNEXPECTED_ERROR_IN_DB, e);
+        }
     }
 }
