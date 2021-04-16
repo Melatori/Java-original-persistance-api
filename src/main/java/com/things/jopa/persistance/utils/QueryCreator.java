@@ -168,6 +168,7 @@ public class QueryCreator {
                 ";";
     }
 
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public static String createCreateTableQuery(ClassDescription classDescription) {
         classDescriptionValidator.validate(classDescription);
 
@@ -178,6 +179,11 @@ public class QueryCreator {
         String[] columnTypes = classDescription.getFieldDescriptions().stream()
                 .map(fieldDescription -> transformToSqlType(fieldDescription.getFieldClass()))
                 .toArray(String[]::new);
+        String pkName = classDescription.getFieldDescriptions().stream()
+                .filter(ClassDescription.FieldDescription::getIsKey)
+                .map(ClassDescription.FieldDescription::getColumnName)
+                .findFirst()
+                .get();
 
         StringBuilder queryBuilder = new StringBuilder("create table ");
         queryBuilder.append(tableName)
@@ -190,6 +196,9 @@ public class QueryCreator {
             queryBuilder.append(columnNames[i])
                     .append(" ")
                     .append(columnTypes[i]);
+
+            if (pkName.equals(columnNames[i]))
+                queryBuilder.append(" PRIMARY KEY");
         }
 
         queryBuilder.append(");");

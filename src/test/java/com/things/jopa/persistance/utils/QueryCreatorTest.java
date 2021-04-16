@@ -122,8 +122,8 @@ class QueryCreatorTest {
     @Test
     void shouldCreateCreateTableQuery() {
         //given
-        String expected1 = "create table TestingEntity (id INTEGER, string TEXT, aDouble DOUBLE);";
-        String expected2 = "create table Test (pk INTEGER, string TEXT, aDouble DOUBLE);";
+        String expected1 = "create table TestingEntity (id INTEGER PRIMARY KEY, string TEXT, aDouble DOUBLE);";
+        String expected2 = "create table Test (pk INTEGER PRIMARY KEY, string TEXT, aDouble DOUBLE);";
 
         ClassDescription classDescription1 = new ClassDescription(TestingEntity.class);
         ClassDescription classDescription2 = new ClassDescription(TestingCustomEntity.class);
