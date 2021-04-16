@@ -4,7 +4,6 @@ import com.things.jopa.persistance.annotations.Column;
 import com.things.jopa.persistance.annotations.Entity;
 import com.things.jopa.persistance.annotations.PrimaryKey;
 import com.things.jopa.persistance.exceptions.JopaException;
-import com.things.jopa.persistance.utils.QueryCreator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.h2.util.StringUtils;
@@ -15,6 +14,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.things.jopa.persistance.utils.SqlTypesConverter.transformToSqlType;
 
 @Data
 public class ObjectDescription {
@@ -123,7 +124,7 @@ public class ObjectDescription {
 
     private Object getValueFromResultSet(ResultSet resultSet, int index) {
         try {
-            final String type = QueryCreator.transformToSqlType(resultSet.getMetaData().getColumnType(index));
+            final String type = transformToSqlType(resultSet.getMetaData().getColumnType(index));
             return switch (type) {
                 case "INTEGER" -> resultSet.getInt(index);
                 case "DOUBLE" -> resultSet.getDouble(index);

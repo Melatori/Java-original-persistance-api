@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static com.things.jopa.persistance.Messages.FETCHING_ERROR;
 import static com.things.jopa.persistance.Messages.UNEXPECTED_ERROR_IN_DB;
+import static com.things.jopa.persistance.utils.SqlTypesConverter.transformToSqlType;
 
 @AllArgsConstructor
 @Slf4j
@@ -61,7 +62,7 @@ public class SchemaEditor {
             final ResultSet columns = connection.getMetaData().getColumns(null, null, entity.getTableName().toUpperCase(), null);
             while (columns.next()) {
                 final String columnName = columns.getString("COLUMN_NAME");
-                final String columnType = QueryCreator.transformToSqlType(columns.getInt("DATA_TYPE"));
+                final String columnType = transformToSqlType(columns.getInt("DATA_TYPE"));
 
                 columnMap.put(columnName, columnType);
             }
@@ -88,7 +89,7 @@ public class SchemaEditor {
     private ClassDescription.FieldDescription[] getFieldDescriptionsForCreate(List<ClassDescription.FieldDescription> fieldDescriptions, Map<String, String> columnsMap) {
         return fieldDescriptions.stream()
                 .filter(fieldDescription -> !((columnsMap.containsKey(fieldDescription.getColumnName().toUpperCase())) &&
-                        columnsMap.containsValue(QueryCreator.transformToSqlType(fieldDescription.getFieldClass()))))
+                        columnsMap.containsValue(transformToSqlType(fieldDescription.getFieldClass()))))
                 .toArray(ClassDescription.FieldDescription[]::new);
     }
 
@@ -97,7 +98,7 @@ public class SchemaEditor {
         for (Map.Entry<String, String> column : columnsMap.entrySet()) {
             boolean remove = true;
             for (ClassDescription.FieldDescription fieldDescription : fieldDescriptions) {
-                if (fieldDescription.getColumnName().toUpperCase().equals(column.getKey()) && QueryCreator.transformToSqlType(fieldDescription.getFieldClass()).equals(column.getValue()))
+                if (fieldDescription.getColumnName().toUpperCase().equals(column.getKey()) && transformToSqlType(fieldDescription.getFieldClass()).equals(column.getValue()))
                     remove = false;
 
             }

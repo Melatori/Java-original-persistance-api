@@ -4,7 +4,6 @@ import com.things.jopa.persistance.EntityInDbStatus;
 import com.things.jopa.persistance.exceptions.JopaException;
 import com.things.jopa.persistance.exceptions.JopaValidationException;
 import com.things.jopa.persistance.mapping.descriptors.ClassDescription;
-import com.things.jopa.persistance.utils.QueryCreator;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -14,6 +13,7 @@ import java.util.List;
 
 import static com.things.jopa.persistance.Messages.FETCHING_ERROR;
 import static com.things.jopa.persistance.Messages.UNEXPECTED_ERROR_IN_DB;
+import static com.things.jopa.persistance.utils.SqlTypesConverter.transformToSqlType;
 
 public class SchemaValidator {
     public void validate(List<ClassDescription> entities, DataSource dataSource) {
@@ -61,7 +61,7 @@ public class SchemaValidator {
             final ResultSet columns = connection.getMetaData().getColumns(null, null, tableName.toUpperCase(), null);
             while (columns.next()) {
                 final String columnName = columns.getString("COLUMN_NAME");
-                final String columnType = QueryCreator.transformToSqlType(columns.getInt("DATA_TYPE"));
+                final String columnType = transformToSqlType(columns.getInt("DATA_TYPE"));
 
                 if (columnName.equals(fieldDescription.getColumnName().toUpperCase()))
                     return true;
