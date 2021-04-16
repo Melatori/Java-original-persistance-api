@@ -2,7 +2,6 @@ package com.things.jopa.persistance;
 
 import com.things.jopa.persistance.mapping.descriptors.ClassDescription;
 import com.things.jopa.persistance.utils.JopaComponentStatus;
-import com.things.jopa.persistance.utils.JopaComponents;
 import com.things.jopa.persistance.utils.SchemaEditor;
 import com.things.jopa.persistance.validation.SchemaValidator;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +31,6 @@ public class JopaInitializer {
 
     public synchronized void initializeJpa(DataSource dataSource) {
         componentStatus = JopaComponentStatus.INITIALIZED;
-
-        JopaComponents.init(dataSource);
 
         EntityScanner entityScanner = new EntityScanner();
         List<ClassDescription> entities = entityScanner.scan();

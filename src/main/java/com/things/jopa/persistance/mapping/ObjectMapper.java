@@ -4,5 +4,4 @@ import com.things.jopa.persistance.mapping.descriptors.ObjectDescription;
 
 public interface ObjectMapper <T> {
     T convertToObject(ObjectDescription descriptor);
-    ObjectDescription convertToDescriptor(T object);
 }

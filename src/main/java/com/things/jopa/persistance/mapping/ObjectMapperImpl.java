@@ -10,8 +10,9 @@ public class ObjectMapperImpl<T> implements ObjectMapper<T> {
     @Override
     public T convertToObject(ObjectDescription descriptor) {
         Class<?> objectClass = descriptor.getObjectClass();
-        T object = null;
+        T object;
         try {
+            //noinspection unchecked
             object = (T) objectClass.getConstructor().newInstance();
 
             for (ObjectDescription.FieldDescription<?> fieldDescription : descriptor.getFieldDescriptions()) {
@@ -25,10 +26,5 @@ public class ObjectMapperImpl<T> implements ObjectMapper<T> {
             throw new JopaException("Failed to fill object's field due to unexpected inconsistency at class: [" + objectClass.getName() + "]");
         }
         return object;
-    }
-
-    @Override
-    public ObjectDescription convertToDescriptor(T object) {
-        return new ObjectDescription(object);
     }
 }
